@@ -48,3 +48,11 @@ def create_report(
         "report_id": new_report.id,
         "created_by": current_user.username
     }
+
+
+@router.get("/all")
+def get_all_reports(db: Session = Depends(get_db)):
+
+    reports = db.query(Report).all()
+
+    return reports
