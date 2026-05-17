@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 
+from app.models.user import User
+
 SECRET_KEY = "railmind_secret_key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -26,6 +28,7 @@ def create_access_token(data: dict):
 def verify_token(token: str):
 
     try:
+
         payload = jwt.decode(
             token,
             SECRET_KEY,
@@ -38,3 +41,17 @@ def verify_token(token: str):
 
     except JWTError:
         return None
+
+
+def get_current_user(token: str, db):
+
+    email = verify_token(token)
+
+    if not email:
+        return None
+
+    user = db.query(User).filter(
+        User.email == email
+    ).first()
+
+    return user
