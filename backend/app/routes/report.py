@@ -55,4 +55,26 @@ def get_all_reports(db: Session = Depends(get_db)):
 
     reports = db.query(Report).all()
 
+@router.get("/my-reports")
+def get_my_reports(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
+
+    token = credentials.credentials
+
+    current_user = get_current_user(
+        token,
+        db
+    )
+
+    if not current_user:
+        return {"message": "Invalid token"}
+
+    reports = db.query(Report).filter(
+        Report.user_id == current_user.id
+    ).all()
+
+
     return reports
+
