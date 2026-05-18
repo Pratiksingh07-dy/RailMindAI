@@ -75,6 +75,38 @@ def get_my_reports(
         Report.user_id == current_user.id
     ).all()
 
+@router.delete("/{report_id}")
+def delete_report(
+    report_id: int,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
 
+    token = credentials.credentials
+
+    current_user = get_current_user(
+        token,
+        db
+    )
+
+    if not current_user:
+        return {"message": "Invalid token"}
+
+    report = db.query(Report).filter(
+        Report.id == report_id
+    ).first()
+
+    if not report:
+        return {"message": "Report not found"}
+
+    if report.user_id != current_user.id:
+        return {"message": "You cannot delete another user's report"}
+
+    db.delete(report)
+    db.commit()
+
+    return {
+        "message": "Report deleted successfully"
+    }
     return reports
 
