@@ -16,6 +16,16 @@ class Report(Base):
 
     description = Column(String)
 
+    status = Column(
+        String,
+        default="Pending"
+    )
+
+    priority = Column(
+        String,
+        default="Medium"
+    )
+
     timestamp = Column(
         DateTime,
         default=datetime.utcnow

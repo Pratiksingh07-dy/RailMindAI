@@ -34,11 +34,13 @@ def create_report(
         return {"message": "Invalid token"}
 
     new_report = Report(
-        user_id=current_user.id,
-        station_name=report.station_name,
-        issue_type=report.issue_type,
-        description=report.description
-    )
+    user_id=current_user.id,
+    station_name=report.station_name,
+    issue_type=report.issue_type,
+    description=report.description,
+    status=report.status,
+    priority=report.priority
+)
 
     db.add(new_report)
     db.commit()
@@ -152,6 +154,8 @@ def update_report(
     report.station_name = updated_report.station_name
     report.issue_type = updated_report.issue_type
     report.description = updated_report.description
+    report.status = updated_report.status
+    report.priority = updated_report.priority
 
     db.commit()
     db.refresh(report)
