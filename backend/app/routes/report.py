@@ -187,3 +187,56 @@ def filter_reports(
     reports = query.all()
 
     return reports
+
+@router.get("/stats")
+def report_stats(
+    db: Session = Depends(get_db)
+):
+
+    total_reports = db.query(Report).count()
+
+    active_reports = db.query(
+        Report
+    ).filter(
+        Report.status == "Active"
+    ).count()
+
+    pending_reports = db.query(
+        Report
+    ).filter(
+        Report.status == "Pending"
+    ).count()
+
+    resolved_reports = db.query(
+        Report
+    ).filter(
+        Report.status == "Resolved"
+    ).count()
+
+    high_priority = db.query(
+        Report
+    ).filter(
+        Report.priority == "High"
+    ).count()
+
+    medium_priority = db.query(
+        Report
+    ).filter(
+        Report.priority == "Medium"
+    ).count()
+
+    low_priority = db.query(
+        Report
+    ).filter(
+        Report.priority == "Low"
+    ).count()
+
+    return {
+        "total_reports": total_reports,
+        "active_reports": active_reports,
+        "pending_reports": pending_reports,
+        "resolved_reports": resolved_reports,
+        "high_priority": high_priority,
+        "medium_priority": medium_priority,
+        "low_priority": low_priority
+    }
