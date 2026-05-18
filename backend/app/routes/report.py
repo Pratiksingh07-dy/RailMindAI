@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.models.report import Report
-from app.schemas.report_schema import ReportCreate
+from app.schemas.report_schema import ReportCreate, ReportUpdate
 from app.utils.auth import get_current_user
 
 router = APIRouter(
@@ -15,6 +15,7 @@ router = APIRouter(
 security = HTTPBearer()
 
 
+# CREATE REPORT
 @router.post("/create")
 def create_report(
     report: ReportCreate,
@@ -50,11 +51,16 @@ def create_report(
     }
 
 
+# GET ALL REPORTS
 @router.get("/all")
 def get_all_reports(db: Session = Depends(get_db)):
 
     reports = db.query(Report).all()
 
+    return reports
+
+
+# GET MY REPORTS
 @router.get("/my-reports")
 def get_my_reports(
     credentials: HTTPAuthorizationCredentials = Depends(security),
@@ -75,6 +81,10 @@ def get_my_reports(
         Report.user_id == current_user.id
     ).all()
 
+    return reports
+
+
+# DELETE REPORT
 @router.delete("/{report_id}")
 def delete_report(
     report_id: int,
@@ -108,5 +118,45 @@ def delete_report(
     return {
         "message": "Report deleted successfully"
     }
-    return reports
 
+
+# UPDATE REPORT
+@router.put("/{report_id}")
+def update_report(
+    report_id: int,
+    updated_report: ReportUpdate,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
+
+    token = credentials.credentials
+
+    current_user = get_current_user(
+        token,
+        db
+    )
+
+    if not current_user:
+        return {"message": "Invalid token"}
+
+    report = db.query(Report).filter(
+        Report.id == report_id
+    ).first()
+
+    if not report:
+        return {"message": "Report not found"}
+
+    if report.user_id != current_user.id:
+        return {"message": "You cannot edit another user's report"}
+
+    report.station_name = updated_report.station_name
+    report.issue_type = updated_report.issue_type
+    report.description = updated_report.description
+
+    db.commit()
+    db.refresh(report)
+
+    return {
+        "message": "Report updated successfully",
+        "updated_report": report.id
+    }
