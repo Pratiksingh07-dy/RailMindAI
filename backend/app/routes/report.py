@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
@@ -164,3 +164,26 @@ def update_report(
         "message": "Report updated successfully",
         "updated_report": report.id
     }
+
+@router.get("/filter")
+def filter_reports(
+    status: str = Query(None),
+    priority: str = Query(None),
+    db: Session = Depends(get_db)
+):
+
+    query = db.query(Report)
+
+    if status:
+        query = query.filter(
+            Report.status == status
+        )
+
+    if priority:
+        query = query.filter(
+            Report.priority == priority
+        )
+
+    reports = query.all()
+
+    return reports
