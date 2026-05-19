@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from app.utils.auth import get_current_user
+from app.models.report import Report
 
 from app.database.database import get_db
 from app.models.user import User
@@ -17,7 +20,7 @@ router = APIRouter(
     prefix="/users",
     tags=["Users"]
 )
-
+security = HTTPBearer()
 
 @router.post("/signup")
 def signup(
@@ -71,4 +74,34 @@ def login(
     return {
         "access_token": token,
         "token_type": "bearer"
+    }
+
+@router.get("/profile")
+def get_profile(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
+
+    token = credentials.credentials
+
+    current_user = get_current_user(
+        token,
+        db
+    )
+
+    if not current_user:
+        return {
+            "message":"Invalid token"
+        }
+
+    total_reports = db.query(
+        Report
+    ).filter(
+        Report.user_id == current_user.id
+    ).count()
+
+    return {
+        "username": current_user.username,
+        "email": current_user.email,
+        "total_reports": total_reports
     }
