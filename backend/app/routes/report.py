@@ -240,3 +240,17 @@ def report_stats(
         "medium_priority": medium_priority,
         "low_priority": low_priority
     }
+
+@router.get("/station/{station_name}")
+def get_station_reports(
+    station_name: str,
+    db: Session = Depends(get_db)
+):
+
+    reports = db.query(
+        Report
+    ).filter(
+        Report.station_name == station_name
+    ).all()
+
+    return reports    
