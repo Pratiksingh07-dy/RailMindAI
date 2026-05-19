@@ -364,3 +364,68 @@ def incident_count(
         )
 
     return result
+
+@router.get("/paginated")
+def paginated_reports(
+    page: int = 1,
+    limit: int = 5,
+    db: Session = Depends(get_db)
+):
+
+    skip = (page - 1) * limit
+
+    reports = db.query(
+        Report
+    ).offset(
+        skip
+    ).limit(
+        limit
+    ).all()
+
+    return reports
+
+@router.get("/recent")
+def recent_reports(
+    db: Session = Depends(get_db)
+):
+
+    reports = db.query(
+        Report
+    ).order_by(
+        Report.timestamp.desc()
+    ).limit(
+        5
+    ).all()
+
+    return reports
+
+@router.get("/top-stations")
+def top_stations(
+    db: Session = Depends(get_db)
+):
+
+    data = db.query(
+        Report.station_name,
+        func.count(Report.id)
+    ).group_by(
+        Report.station_name
+    ).order_by(
+        func.count(
+            Report.id
+        ).desc()
+    ).limit(
+        5
+    ).all()
+
+    result = []
+
+    for station, count in data:
+
+        result.append(
+            {
+                "station_name": station,
+                "report_count": count
+            }
+        )
+
+    return result
