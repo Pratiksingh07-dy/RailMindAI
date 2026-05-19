@@ -1,10 +1,16 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+
 
 from app.database.database import get_db
 from app.models.report import Report
-from app.schemas.report_schema import ReportCreate, ReportUpdate
+from app.schemas.report_schema import (
+    ReportCreate,
+    ReportUpdate,
+    ReportStatusUpdate
+)
 from app.utils.auth import get_current_user
 
 router = APIRouter(
@@ -254,3 +260,107 @@ def get_station_reports(
     ).all()
 
     return reports    
+
+@router.put("/resolve/{report_id}")
+def resolve_report(
+    report_id: int,
+    status_data: ReportStatusUpdate,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
+
+    token = credentials.credentials
+
+    current_user = get_current_user(
+        token,
+        db
+    )
+
+    if not current_user:
+        return {
+            "message":"Invalid token"
+        }
+
+    if current_user.role != "admin":
+        return {
+            "message":"Admin only"
+        }
+
+    report = db.query(
+        Report
+    ).filter(
+        Report.id == report_id
+    ).first()
+
+    if not report:
+        return {
+            "message":"Report not found"
+        }
+
+    report.status = status_data.status
+
+    db.commit()
+    db.refresh(report)
+
+    return {
+        "message":"Report status updated",
+        "new_status": report.status
+    }
+
+@router.get("/dashboard-stats")
+def dashboard_stats(
+    db: Session = Depends(get_db)
+):
+
+    total_reports = db.query(
+        Report
+    ).count()
+
+    pending_reports = db.query(
+        Report
+    ).filter(
+        Report.status == "Pending"
+    ).count()
+
+    active_reports = db.query(
+        Report
+    ).filter(
+        Report.status == "Active"
+    ).count()
+
+    resolved_reports = db.query(
+        Report
+    ).filter(
+        Report.status == "Resolved"
+    ).count()
+
+    return {
+        "total_reports": total_reports,
+        "pending_reports": pending_reports,
+        "active_reports": active_reports,
+        "resolved_reports": resolved_reports
+    }
+
+@router.get("/incident-count")
+def incident_count(
+    db: Session = Depends(get_db)
+):
+
+    data = db.query(
+        Report.issue_type,
+        func.count(Report.id)
+    ).group_by(
+        Report.issue_type
+    ).all()
+
+    result = []
+
+    for issue, count in data:
+        result.append(
+            {
+                "issue_type": issue,
+                "count": count
+            }
+        )
+
+    return result

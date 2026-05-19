@@ -15,3 +15,6 @@ class ReportUpdate(BaseModel):
     description: str
     status: str
     priority: str
+
+class ReportStatusUpdate(BaseModel):
+    status: str    
