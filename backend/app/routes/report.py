@@ -1,18 +1,32 @@
-from fastapi import APIRouter, Depends, Query
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import (
+    APIRouter,
+    Depends,
+    Query,
+    UploadFile,
+    File,
+    HTTPException
+)
+
+from fastapi.security import (
+    HTTPBearer,
+    HTTPAuthorizationCredentials
+)
+
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-
 from app.database.database import get_db
 from app.models.report import Report
+
 from app.schemas.report_schema import (
     ReportCreate,
     ReportUpdate,
     ReportStatusUpdate,
     CommentCreate
 )
+
 from app.utils.auth import get_current_user
+
 
 router = APIRouter(
     prefix="/reports",
@@ -115,7 +129,10 @@ def delete_report(
     ).first()
 
     if not report:
-        return {"message": "Report not found"}
+        raise HTTPException(
+    status_code=404,
+    detail="Report not found"
+)
 
     if (
     report.user_id != current_user.id
@@ -149,7 +166,10 @@ def update_report(
     )
 
     if not current_user:
-        return {"message": "Invalid token"}
+        raise HTTPException(
+    status_code=401,
+    detail="Invalid token"
+)
 
     report = db.query(Report).filter(
         Report.id == report_id
@@ -290,9 +310,10 @@ def resolve_report(
         }
 
     if current_user.role != "admin":
-        return {
-            "message":"Admin only"
-        }
+        raise HTTPException(
+    status_code=403,
+    detail="Admin only"
+)
 
     report = db.query(
         Report
@@ -531,4 +552,26 @@ def get_notifications(
             f"Report {report.id} has been resolved"
             for report in reports
         ]
+    }
+
+
+@router.post("/upload")
+async def upload_image(
+    file: UploadFile = File(...)
+):
+
+    file_location = f"uploads/{file.filename}"
+
+    with open(
+        file_location,
+        "wb"
+    ) as buffer:
+
+        buffer.write(
+            await file.read()
+        )
+
+    return {
+        "message": "Image uploaded successfully",
+        "image_path": file_location
     }
