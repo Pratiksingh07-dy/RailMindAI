@@ -32,10 +32,23 @@ def signup(
     db: Session = Depends(get_db)
 ):
 
+    existing_email = db.query(
+        User
+    ).filter(
+        User.email == user.email
+    ).first()
+
+    if existing_email:
+        return {
+            "message":"Email already exists"
+        }
+
     new_user = User(
         username=user.username,
         email=user.email,
-        password=hash_password(user.password),
+        password=hash_password(
+            user.password
+        ),
         role="user"
     )
 
@@ -44,8 +57,8 @@ def signup(
     db.refresh(new_user)
 
     return {
-        "message": "User created successfully",
-        "user_id": new_user.id
+        "message":"User created successfully",
+        "user_id":new_user.id
     }
 
 @router.post("/login")

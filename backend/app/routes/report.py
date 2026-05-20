@@ -117,7 +117,11 @@ def delete_report(
     if not report:
         return {"message": "Report not found"}
 
-    if report.user_id != current_user.id:
+    if (
+    report.user_id != current_user.id
+    and current_user.role != "admin"
+    and current_user.role != "staff"
+):
         return {"message": "You cannot delete another user's report"}
 
     db.delete(report)
@@ -154,7 +158,11 @@ def update_report(
     if not report:
         return {"message": "Report not found"}
 
-    if report.user_id != current_user.id:
+    if (
+    report.user_id != current_user.id
+    and current_user.role != "admin"
+    and current_user.role != "staff"
+):
         return {"message": "You cannot edit another user's report"}
 
     report.station_name = updated_report.station_name
