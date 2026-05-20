@@ -5,8 +5,7 @@ class ReportCreate(BaseModel):
     station_name: str
     issue_type: str
     description: str
-    status: str = "Pending"
-    priority: str = "Medium"
+    image_url: str = ""
 
 
 class ReportUpdate(BaseModel):

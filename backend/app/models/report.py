@@ -45,3 +45,8 @@ class Report(Base):
     String,
     default=""
 )
+    
+    image_url = Column(
+    String,
+    default=""
+)

@@ -45,8 +45,7 @@ def create_report(
     station_name=report.station_name,
     issue_type=report.issue_type,
     description=report.description,
-    status=report.status,
-    priority=report.priority
+    image_url=report.image_url
 )
 
     db.add(new_report)
@@ -502,4 +501,26 @@ def trust_score(
 
     return {
         "trust_score": report.trust_score
+    }
+
+
+@router.get("/notifications/{user_id}")
+def get_notifications(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+
+    reports = db.query(
+        Report
+    ).filter(
+        Report.user_id == user_id,
+        Report.status == "Resolved"
+    ).all()
+
+    return {
+        "notifications":
+        [
+            f"Report {report.id} has been resolved"
+            for report in reports
+        ]
     }
