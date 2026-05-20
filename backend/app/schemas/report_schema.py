@@ -18,3 +18,6 @@ class ReportUpdate(BaseModel):
 
 class ReportStatusUpdate(BaseModel):
     status: str    
+
+class CommentCreate(BaseModel):
+    comment: str    

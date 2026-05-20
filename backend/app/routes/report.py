@@ -9,7 +9,8 @@ from app.models.report import Report
 from app.schemas.report_schema import (
     ReportCreate,
     ReportUpdate,
-    ReportStatusUpdate
+    ReportStatusUpdate,
+    CommentCreate
 )
 from app.utils.auth import get_current_user
 
@@ -429,3 +430,76 @@ def top_stations(
         )
 
     return result
+
+@router.put("/comment/{report_id}")
+def add_comment(
+    report_id: int,
+    data: CommentCreate,
+    db: Session = Depends(get_db)
+):
+
+    report = db.query(
+        Report
+    ).filter(
+        Report.id == report_id
+    ).first()
+
+    if not report:
+        return {
+            "message":"Report not found"
+        }
+
+    report.comments = data.comment
+
+    db.commit()
+
+    return {
+        "message":"Comment added"
+    }
+
+
+@router.put("/upvote/{report_id}")
+def upvote_report(
+    report_id: int,
+    db: Session = Depends(get_db)
+):
+
+    report = db.query(
+        Report
+    ).filter(
+        Report.id == report_id
+    ).first()
+
+    if not report:
+        return {
+            "message":"Report not found"
+        }
+
+    report.upvotes += 1
+
+    report.trust_score += 1
+
+    db.commit()
+
+    return {
+        "message":"Upvote added",
+        "upvotes": report.upvotes,
+        "trust_score": report.trust_score
+    }
+
+
+@router.get("/trust/{report_id}")
+def trust_score(
+    report_id: int,
+    db: Session = Depends(get_db)
+):
+
+    report = db.query(
+        Report
+    ).filter(
+        Report.id == report_id
+    ).first()
+
+    return {
+        "trust_score": report.trust_score
+    }

@@ -30,3 +30,18 @@ class Report(Base):
         DateTime,
         default=datetime.utcnow
     )
+
+    upvotes = Column(
+    Integer,
+    default=0
+)
+
+    trust_score = Column(
+    Integer,
+    default=0
+)
+
+    comments = Column(
+    String,
+    default=""
+)
