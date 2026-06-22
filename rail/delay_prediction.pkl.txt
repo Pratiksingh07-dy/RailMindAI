@@ -1,0 +1,29 @@
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestRegressor
+import joblib
+
+n = 5000
+
+data = pd.DataFrame({
+    "weather": np.random.randint(0, 3, n),
+    "congestion": np.random.randint(0, 100, n),
+    "previous_delay": np.random.randint(0, 30, n),
+    "rush_hour": np.random.randint(0, 2, n)
+})
+
+data["delay_minutes"] = (
+    data["congestion"] * 0.2 +
+    data["previous_delay"] * 0.5 +
+    data["rush_hour"] * 10
+)
+
+X = data.drop("delay_minutes", axis=1)
+y = data["delay_minutes"]
+
+model = RandomForestRegressor(n_estimators=100)
+model.fit(X, y)
+
+joblib.dump(model, "delay_prediction.pkl")
+
+print("delay_prediction.pkl created")

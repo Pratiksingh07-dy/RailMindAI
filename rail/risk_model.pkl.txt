@@ -1,0 +1,28 @@
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import GradientBoostingRegressor
+import joblib
+
+n = 5000
+
+data = pd.DataFrame({
+    "crowd_density": np.random.randint(0, 100, n),
+    "incident_count": np.random.randint(0, 20, n),
+    "rainfall": np.random.uniform(0, 50, n)
+})
+
+data["risk_score"] = (
+    data["crowd_density"] * 0.6 +
+    data["incident_count"] * 2 +
+    data["rainfall"] * 0.3
+)
+
+X = data.drop("risk_score", axis=1)
+y = data["risk_score"]
+
+model = GradientBoostingRegressor()
+model.fit(X, y)
+
+joblib.dump(model, "risk_model.pkl")
+
+print("risk_model.pkl created")

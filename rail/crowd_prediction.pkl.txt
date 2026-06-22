@@ -1,0 +1,43 @@
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+import joblib
+
+np.random.seed(42)
+
+n = 5000
+
+data = pd.DataFrame({
+    "hour": np.random.randint(0, 24, n),
+    "day_of_week": np.random.randint(0, 7, n),
+    "rainfall": np.random.uniform(0, 50, n),
+    "rush_hour": np.random.randint(0, 2, n),
+    "temperature": np.random.uniform(20, 40, n)
+})
+
+crowd_score = (
+    data["hour"] * 0.3 +
+    data["rush_hour"] * 20 +
+    data["rainfall"] * 0.1
+)
+
+data["crowd_level"] = pd.cut(
+    crowd_score,
+    bins=[-1, 15, 25, 35, 100],
+    labels=[0, 1, 2, 3]
+)
+
+X = data.drop("crowd_level", axis=1)
+y = data["crowd_level"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+model = RandomForestClassifier(n_estimators=100)
+model.fit(X_train, y_train)
+
+joblib.dump(model, "crowd_prediction.pkl")
+
+print("crowd_prediction.pkl created")
